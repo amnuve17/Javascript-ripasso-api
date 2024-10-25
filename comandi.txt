@@ -1,0 +1,1 @@
+node + nome del file + estensione lanciano il js in terminale

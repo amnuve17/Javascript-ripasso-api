@@ -1,4 +1,4 @@
-const baseUrl = 'https://jsonplaceholder.typicode.com';
+const baseUrl = 'http://localhost:3000';
 
 const createTodoDiv = (todo) => {
     const div = document.createElement('div');
@@ -7,17 +7,44 @@ const createTodoDiv = (todo) => {
     input.id = todo.id;
     input.checked = todo.completed;
     input.onchange = handleCheckbox; //riferimento alla funzione si scrive senza le ()
-    const label = document.createElement('label');
-    label.textContent = todo.title;
+    const label = document.createElement('input');
+    label.value = todo.title;
+    label.onchange = (e) => handleChange(todo, e.target.value); //prende il valore di label
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "elimina";
+    deleteButton.onclick = () => handleDelete(todo); //creo una funzione che lancia la funzione che mi serve perché se scrivo una funzione direttament
     div.appendChild(input);
     div.appendChild(label);
+    div.appendChild(deleteButton) ;
     return div;
 }
+
+function handleDelete(todo){
+    fetch(baseUrl + '/todos/' + todo.id, {method:'DELETE'})
+    .then(res => res.json())
+    .then(() => {
+        firstTodos.delete(todo.id);
+    })
+}
+
+function handleChange(todo, newTitle){
+    fetch(baseUrl + '/todos/' + todo.id, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: newTitle }),
+        headers: {'Content-Type':'application/json'}
+    })
+    .then(res => res.json())
+    .then(newTodo =>{
+        firstTodos.update(newTodo);
+    })
+}
+
 
 const loading = document.querySelector('#todos .loading');
 const todoDiv = document.querySelector('#todos');
 
-const todoManager = () => {
+const todoManager = () => { //manager che gestisce l'interfaccia
     let state = [];
     return {
         set: function(newState) {
@@ -33,6 +60,17 @@ const todoManager = () => {
         add: function(newElement){
             state.unshift(newElement);
             this.render();
+        },
+        delete: function(id){
+            /* const index = state.findIndex(todo => todo.id === id);
+            state.splice(index, 1); */ //trova id e elimina
+
+            state = state.filter(todo => todo.id !== id); //esclude l'id e renderizza solo gli altri
+            this.render();
+        },
+        update: function(todo){
+            const index = state.findIndex(newTodo => todo.id == newTodo.id); 
+            state.splice(index, 1, todo); //sostituisce il valore con quello nuovo
         }
     }
 }
